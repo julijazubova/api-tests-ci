@@ -1,13 +1,23 @@
 pipeline {
     agent any
     triggers {
-        pollSCM('H/1 * * * *')
+        cron('*/15 * * * *')
     }
     stages {
-        stage('build-docker-base') {
-            steps {
-                sh "docker build -t julijazubova/ubuntu_ruby_base:latest . -f Dockerfile_base"
+        stage('run-api-tests') {
+            parallel{
+                stage('run-api-tests-dev'){
+                    steps{
+                        sh "docker run --rm --name api_dev_tests --entrypoint=cucumber mtararujs/ubuntu_ruby_executor:latest PLATFORM=DEV"
+                    }
+                }
+                stage('run-api-tests-prd'){
+                    steps{
+                        sh "docker run --rm --name api_prd_tests --entrypoint=cucumber mtararujs/ubuntu_ruby_executor:latest PLATFORM=PRD"
+                    }
+                }
             }
+
         }
     }
 }
